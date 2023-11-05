@@ -1,8 +1,3 @@
-use crate::client::{Client, ClientMap};
-use crate::db::dbmanager::DatabaseManager;
-use crate::errors::MessageError;
-use crate::threads::signals::Signal;
-use crate::utils::constants::CRLF;
 use std::collections::hash_map::RandomState;
 use std::io::Write;
 use std::net::TcpStream;
@@ -14,13 +9,14 @@ use std::{
     thread,
     thread::JoinHandle,
 };
+use crate::client::ClientMap;
 
 pub struct Server {
     pub name: String,
     pub port: String,
     pub address: String,
-    pub sender: Arc<Mutex<mpsc::Sender<Signal>>>,
-    pub receiver: Arc<Mutex<mpsc::Receiver<Signal>>>,
+    pub sender: Arc<Mutex<mpsc::Sender<()>>>,
+    pub receiver: Arc<Mutex<mpsc::Receiver<()>>>,
     pub receiver_thread: Option<JoinHandle<()>>,
     pub registered_clients: ClientMap,
     pub socket: Option<TcpStream>,
@@ -36,7 +32,6 @@ impl Drop for Server {
                 println!("Error while closing receiver thread from {}", self.name);
             }
         }
-        self.is_online = false;
     }
 }
 
@@ -45,7 +40,7 @@ impl Server {
     pub fn new(
         address: &str,
         clients: &ClientMap,
-    ) -> Result<Server, MessageError> {
+    ) -> Result<Server, ()> {
         let (sender, receiver) = mpsc::channel();
         let name = format!("server_{}", address);
         let mut registered_clients = Arc::clone(clients);
@@ -65,23 +60,16 @@ impl Server {
     /// This function will execute the reading thread of the receiver end point
     /// of the server channel. It will handle each server signal.
     pub fn read_from_recv(&mut self) {
-        if self.is_online {
-            return;
-        }
         let receiver = Arc::clone(&self.receiver);
         let registered_clients = Arc::clone(&self.registered_clients);
         self.receiver_thread = Some(thread::spawn(move || loop {
             let receiver = receiver.lock().unwrap();
             if let Ok(msg) = receiver.recv() {
                 match msg {
-                    Signal::Terminate => {
-                        break;
-                    }
                     _ => println!("Only server signals are accepted!"),
                 }
             }
         }));
-        self.is_online = true;
     }
 
 }

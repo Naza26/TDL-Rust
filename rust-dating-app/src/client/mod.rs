@@ -1,6 +1,3 @@
-pub mod handler;
-pub mod handles;
-use crate::message::connection::user::UserMessage;
 use std::collections::HashMap;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
@@ -26,6 +23,9 @@ impl Clone for Client {
         }
         Self {
             socket,
+            age: Some(1),
+            country: Some("arg".to_string()),
+            name: Some("pepe".to_string())
         }
     }
 }
@@ -34,6 +34,10 @@ impl Client {
     pub fn new(socket: TcpStream) -> Self {
         Self {
             socket: Some(socket),
+            age: Some(1),
+            country: Some("arg".to_string()),
+            name: Some("pepe".to_string())
+
         }
     }
 }
