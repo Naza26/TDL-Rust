@@ -1,6 +1,6 @@
 //! Run client from terminal. Used for testing
 use std::env::args;
-use std::io::{self, BufRead, BufReader, ErrorKind, Stdin};
+use std::io::{self, BufRead, BufReader, ErrorKind, Stdin, stdin, Write};
 use std::net::TcpStream;
 
 static CLIENT_ARGS: usize = 3;
@@ -17,27 +17,15 @@ pub fn connect() {
     println!("Connecting to {:?}", address);
     let stdin: Stdin = io::stdin();
     let mut socket = TcpStream::connect(address).unwrap();
+    println!("Esperando");
     for line in stdin.lock().lines() {
         let l = line.unwrap();
-        // Check if the socket has been closed
-        match socket.peer_addr() {
-            Ok(_) => {
-                // Socket is still open
-                client_run(l, &mut socket);
-            }
-            Err(error) if error.kind() == ErrorKind::NotConnected => {
-                println!("Socket has been closed, stop reading from stdin. {}", error);
-                break;
-            }
-            Err(error) => {
-                println!("Error ocurred with socket: {}", error)
-            }
-        }
+        client_run(l, &mut socket);
     }
 }
 
 fn client_run(line: String, socket: &mut TcpStream) -> std::io::Result<()> {
-    println!("{}", line);
+    write_to_socket(&line, socket);
 
     listen_from(socket);
 
@@ -46,7 +34,11 @@ fn client_run(line: String, socket: &mut TcpStream) -> std::io::Result<()> {
 
 fn write_to_socket(msg: &str, socket: &mut TcpStream)
 {
-    println!("asdaa");
+    let payload = msg.as_bytes().to_vec();
+    socket.write_all(payload.as_slice());
+    socket.write_all(b"\n");
+    socket.flush();
+    println!("written");
 }
 
 // Reads constantly from buffer until connection to server is lost

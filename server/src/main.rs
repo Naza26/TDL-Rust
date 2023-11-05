@@ -4,6 +4,7 @@ mod client;
 
 use std::collections::HashMap;
 use std::env::args;
+use std::io::{BufRead, BufReader, Read};
 use std::net::{TcpListener, TcpStream};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
@@ -42,12 +43,6 @@ fn server_run(address: &str) -> std::io::Result<()> {
 
         thread::spawn(move || {
             let mut client_stream: TcpStream = connection.0;
-            client_stream
-                .set_read_timeout(Some(Duration::new(10, 0)))
-                .expect("error");
-            client_stream
-                .set_write_timeout(Some(Duration::new(1, 0)))
-                .expect("error");
             let _result = handle_client(&mut client_stream, &server);
         });
     }
@@ -58,5 +53,12 @@ fn handle_client(stream: &mut TcpStream, server: &Arc<Mutex<Server>>) -> std::io
         channel();
 
     println!("llegue :)");
+
+    let mut reader = BufReader::new(stream.try_clone().unwrap());
+    let mut buf = String::new();
+    match reader.read_line(&mut buf) {
+        Ok(m) => println!("{}", buf),
+        Err(e) => println!("{}", e)
+    }
     Ok(())
 }
