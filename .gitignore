@@ -1,0 +1,7 @@
+# will have compiled files and executables
+target/
+client/target
+client/Cargo.lock
+server/target
+server/Cargo.lock
+.idea
