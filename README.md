@@ -1,7 +1,7 @@
 # Rust-LAND
 ### Integrantes:
 - Lucia
-- Naza
+- Rueda, Nazarena 106280
 - Su, Agustina Doly 105708
 
 ### Cómo correr la aplicación
