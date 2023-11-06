@@ -5,11 +5,20 @@
 - Su, Agustina Doly 105708
 
 ### Cómo correr la aplicación
-Correr server: `cargo run config.txt`
+
+Correr server: `cargo run --config_name`
+
+```
+cd server
+cargo run config.txt
+```
 
 Correr client: `cargo run --host --port`
 
-(ej: `cargo run 127.0.0.1 9244`)
+```
+cd client
+cargo run 127.0.0.1 9244
+```
 
 ### Aplicación para speed dating
 
