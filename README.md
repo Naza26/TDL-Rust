@@ -1,6 +1,6 @@
 # Rust-LAND
 ### Integrantes:
-- Lucia
+- Lourengo Caridade, Lucia 104880
 - Rueda, Nazarena 106280
 - Su, Agustina Doly 105708
 
