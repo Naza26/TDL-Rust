@@ -1,10 +1,6 @@
-use std::collections::hash_map::RandomState;
-use std::io::Write;
 use std::net::TcpStream;
-use std::sync::{mpsc, MutexGuard};
-use std::time::Duration;
+use std::sync::mpsc;
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
     thread,
     thread::JoinHandle,
@@ -44,7 +40,7 @@ impl Server {
     ) -> Result<Server, ()> {
         let (sender, receiver) = mpsc::channel();
         let name = format!("server_{}", address);
-        let mut registered_clients = Arc::clone(clients);
+        let registered_clients = Arc::clone(clients);
 
         Ok(Server {
             name,
@@ -66,9 +62,7 @@ impl Server {
         self.receiver_thread = Some(thread::spawn(move || loop {
             let receiver = receiver.lock().unwrap();
             if let Ok(msg) = receiver.recv() {
-                match msg {
-                    _ => println!("Only server signals are accepted!"),
-                }
+                 println!("Only server signals are accepted!");
             }
         }));
     }

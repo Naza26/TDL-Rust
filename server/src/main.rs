@@ -4,22 +4,20 @@ mod client;
 
 use std::collections::HashMap;
 use std::env::args;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::net::{TcpListener, TcpStream};
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
-use crate::client::{Client, ClientMap,ClientInfo};
-use crate::commons::arguments::process_arguments;
+use crate::client::{ClientMap,ClientInfo};
+use crate::commons::arguments::arguments_cant_be_processed;
 use crate::server::Server;
-use serde_json;
 
 fn main() -> Result<(), ()> {
     let argv = args().collect::<Vec<String>>();
     let mut config: Vec<String> = Vec::new();
 
-    if process_arguments(argv, &mut config).is_err() {
+    if arguments_cant_be_processed(argv, &mut config) {
         return Err(());
     }
 
@@ -49,8 +47,8 @@ fn server_run(address: &str) -> std::io::Result<()> {
     }
 }
 
-fn handle_client(stream: &mut TcpStream, server: &Arc<Mutex<Server>>) -> std::io::Result<()> {
-    let (tx_client_id, rx_client_id): (Sender<Option<String>>, Receiver<Option<String>>) =
+fn handle_client(stream: &mut TcpStream, _server: &Arc<Mutex<Server>>) -> std::io::Result<()> {
+    let (_tx_client_id, _rx_client_id): (Sender<Option<String>>, Receiver<Option<String>>) =
         channel();
 
     println!("llegue :)");
@@ -58,7 +56,7 @@ fn handle_client(stream: &mut TcpStream, server: &Arc<Mutex<Server>>) -> std::io
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut buf = String::new();
     match reader.read_line(&mut buf) {
-        Ok(m) => {
+        Ok(_m) => {
             // Deserialize the JSON string
             match serde_json::from_str::<ClientInfo>(&buf) {
                 Ok(client_info) => {

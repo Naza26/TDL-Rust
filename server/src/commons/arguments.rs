@@ -2,35 +2,34 @@ use std::fs;
 
 static SERVER_ARGS: usize = 2;
 
-pub fn process_arguments(argv: Vec<String>, config: &mut Vec<String>) -> Result<(), ()> {
+pub fn arguments_cant_be_processed(argv: Vec<String>, config: &mut Vec<String>) -> bool {
     if argv.len() != SERVER_ARGS {
         println!(
-            "{:?}{}{:?}",
+            "{:?}arguments were expected but received{:?}",
             SERVER_ARGS,
-            "arguments were expected but received",
             argv.len()
         );
-        return Err(());
+        return true;
     }
 
     process_config(&argv[1], config);
     if config.len() != 1 {
-        println!("{}{:?}", "1 lines were expected in config.txt but received", config.len());
-        return Err(());
+         println!("1 lines were expected in config.txt but received{:?}", config.len());
+        return true;
     }
 
-    Ok(())
+    false
 }
 
 fn process_config(filename: &str, config: &mut Vec<String>) {
-    let contents = fs::read_to_string(filename).expect("error");
+    let file_content = fs::read_to_string(filename).expect("error");
 
-    let split = contents.split("\n");
-    let vector1: Vec<&str> = split.collect();
+    let lines = file_content.split('\n');
+    let lines_as_vector: Vec<&str> = lines.collect();
 
-    for parameter in vector1 {
-        let split2 = parameter.split(": ");
-        let vector2: Vec<&str> = split2.collect();
-        config.push(vector2[1].to_string());
+    for line in lines_as_vector {
+        let line_parts = line.split(": ");
+        let parsed_info: Vec<&str> = line_parts.collect();
+        config.push(parsed_info[1].to_string());
     }
 }
