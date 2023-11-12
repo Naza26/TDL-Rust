@@ -50,16 +50,7 @@ fn write_to_socket(msg: &str, socket: &mut TcpStream)
     println!("written");
 }
 
-/* 
-fn create_client_info_string(client_info: HashMap<String, String>) -> String {
-    let json_values: Vec<String> = client_info
-        .into_iter()
-        .map(|(key, value)| format!("\"{}\":\"{}\"", key, value))
-        .collect();
 
-    format!("{{{}}}", json_values.join(","))
-}
-*/
 fn create_client_info_string(client_info: HashMap<String, String>) -> String {
     serde_json::to_value(&client_info).expect("Failed to serialize ClientInfo to JSON").to_string()
 
