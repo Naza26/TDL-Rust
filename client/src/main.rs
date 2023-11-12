@@ -61,19 +61,8 @@ fn create_client_info_string(client_info: HashMap<String, String>) -> String {
 }
 */
 fn create_client_info_string(client_info: HashMap<String, String>) -> String {
-    //let json_object: serde_json::Value = serde_json::to_value(client_info)
-        //.expect("Failed to serialize HashMap to JSON");
-    print!("ClientInfo{:?}",client_info);
-    // let json_object: serde_json::Value = json!({
-    //     "name": "Naza",
-    //     "country": "Argentina",
-    //     "age": 24
-    // });
+    serde_json::to_value(&client_info).expect("Failed to serialize ClientInfo to JSON").to_string()
 
-    // json_object.to_string()
-    serde_json::to_string(&client_info).expect("Failed to serialize ClientInfo to JSON")
-
-    
 }
 
 // Reads constantly from buffer until connection to server is lost

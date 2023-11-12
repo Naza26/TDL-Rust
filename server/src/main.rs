@@ -59,11 +59,18 @@ fn handle_client(stream: &mut TcpStream, server: &Arc<Mutex<Server>>) -> std::io
     let mut buf = String::new();
     match reader.read_line(&mut buf) {
         Ok(m) => {
-            println!("{}", buf);
-            let client_info: ClientInfo = serde_json::from_str::<ClientInfo>(&buf)?;
-            println!("{}",client_info.name.unwrap());
-            println!("{}",client_info.country.unwrap());
-            println!("{}",client_info.age.unwrap());
+            // Deserialize the JSON string
+            match serde_json::from_str::<ClientInfo>(&buf) {
+                Ok(client_info) => {
+                    println!("{:?}", client_info);
+                    println!("Name: {}", client_info.name.unwrap_or_default());
+                    println!("Country: {}", client_info.country.unwrap_or_default());
+                    println!("Age: {}", client_info.age.unwrap_or_default());
+                }
+                Err(e) => {
+                    eprintln!("Error deserializing: {}", e);
+                }
+            }
         },
         Err(e) => println!("{}", e)
     }

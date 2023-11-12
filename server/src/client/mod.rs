@@ -6,7 +6,7 @@ use serde::{Deserialize,Serialize};
 #[derive(Debug,Serialize,Deserialize)]
 pub struct ClientInfo {
     pub name: Option<String>,
-    pub age: Option<u8>,
+    pub age: Option<String>,
     pub country: Option<String>
 }
 
