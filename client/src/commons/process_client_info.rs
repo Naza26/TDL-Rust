@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 
+use serde_json::Value;
+
 pub fn process_client_info() -> Result<HashMap<String, String>, ()> {
 
     let client = process_config("datos.txt");
@@ -24,3 +26,4 @@ fn process_config(filename: &str) -> Result<HashMap<String, String>, ()> {
 
     return Ok(client_info);
 }
+

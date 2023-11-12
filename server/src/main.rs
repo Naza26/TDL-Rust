@@ -10,9 +10,10 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use crate::client::{Client, ClientMap};
+use crate::client::{Client, ClientMap,ClientInfo};
 use crate::commons::arguments::process_arguments;
 use crate::server::Server;
+use serde_json;
 
 fn main() -> Result<(), ()> {
     let argv = args().collect::<Vec<String>>();
@@ -57,8 +58,15 @@ fn handle_client(stream: &mut TcpStream, server: &Arc<Mutex<Server>>) -> std::io
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut buf = String::new();
     match reader.read_line(&mut buf) {
-        Ok(m) => println!("{}", buf),
+        Ok(m) => {
+            println!("{}", buf);
+            let client_info: ClientInfo = serde_json::from_str::<ClientInfo>(&buf)?;
+            println!("{}",client_info.name.unwrap());
+            println!("{}",client_info.country.unwrap());
+            println!("{}",client_info.age.unwrap());
+        },
         Err(e) => println!("{}", e)
     }
     Ok(())
 }
+

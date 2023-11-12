@@ -4,6 +4,9 @@ use std::collections::HashMap;
 use std::env::args;
 use std::io::{self, BufRead, BufReader, ErrorKind, Stdin, stdin, Write};
 use std::net::TcpStream;
+use serde_json::json;
+
+
 use crate::commons::process_client_info::process_client_info;
 
 static CLIENT_ARGS: usize = 3;
@@ -47,16 +50,30 @@ fn write_to_socket(msg: &str, socket: &mut TcpStream)
     println!("written");
 }
 
+/* 
 fn create_client_info_string(client_info: HashMap<String, String>) -> String {
-    let mut msg = "{".to_string();
-    for (key, value) in client_info {
-        msg += &key;
-        msg += ":";
-        msg += &value;
-        msg += ",";
-    }
-    msg += "}";
-    return msg;
+    let json_values: Vec<String> = client_info
+        .into_iter()
+        .map(|(key, value)| format!("\"{}\":\"{}\"", key, value))
+        .collect();
+
+    format!("{{{}}}", json_values.join(","))
+}
+*/
+fn create_client_info_string(client_info: HashMap<String, String>) -> String {
+    //let json_object: serde_json::Value = serde_json::to_value(client_info)
+        //.expect("Failed to serialize HashMap to JSON");
+    print!("ClientInfo{:?}",client_info);
+    // let json_object: serde_json::Value = json!({
+    //     "name": "Naza",
+    //     "country": "Argentina",
+    //     "age": 24
+    // });
+
+    // json_object.to_string()
+    serde_json::to_string(&client_info).expect("Failed to serialize ClientInfo to JSON")
+
+    
 }
 
 // Reads constantly from buffer until connection to server is lost

@@ -1,3 +1,3 @@
-Nombre: Naza
-Pais: Argentina
-Edad: 24
+name: Naza
+country: Argentina
+age: 24

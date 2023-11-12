@@ -11,6 +11,7 @@ use std::{
 };
 use crate::client::ClientMap;
 
+
 pub struct Server {
     pub name: String,
     pub port: String,
@@ -72,4 +73,5 @@ impl Server {
         }));
     }
 
+ 
 }

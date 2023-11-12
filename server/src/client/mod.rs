@@ -1,12 +1,18 @@
 use std::collections::HashMap;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
+use serde::{Deserialize,Serialize};
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct ClientInfo {
+    pub name: Option<String>,
+    pub age: Option<u8>,
+    pub country: Option<String>
+}
 
 #[derive(Debug)]
 pub struct Client {
-    pub name: Option<String>,
-    pub age: Option<u8>,
-    pub country: Option<String>,
+    pub client_info: Option<ClientInfo>,
     pub socket: Option<TcpStream>
 }
 
@@ -23,9 +29,7 @@ impl Clone for Client {
         }
         Self {
             socket,
-            age: Some(1),
-            country: Some("arg".to_string()),
-            name: Some("pepe".to_string())
+            client_info: None
         }
     }
 }
@@ -34,9 +38,7 @@ impl Client {
     pub fn new(socket: TcpStream) -> Self {
         Self {
             socket: Some(socket),
-            age: Some(1),
-            country: Some("arg".to_string()),
-            name: Some("pepe".to_string())
+            client_info: None
 
         }
     }
