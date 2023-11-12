@@ -1,70 +1,50 @@
+pub mod room;
+
 use std::net::TcpStream;
-use std::sync::mpsc;
 use std::{
-    sync::{Arc, Mutex},
-    thread,
     thread::JoinHandle,
 };
-use crate::client::ClientMap;
+use crate::client::{ClientInfo, Clients};
+use crate::server::room::Rooms;
+
 
 
 pub struct Server {
-    pub name: String,
-    pub port: String,
-    pub address: String,
-    pub sender: Arc<Mutex<mpsc::Sender<()>>>,
-    pub receiver: Arc<Mutex<mpsc::Receiver<()>>>,
     pub receiver_thread: Option<JoinHandle<()>>,
-    pub registered_clients: ClientMap,
-    pub socket: Option<TcpStream>,
+    pub registered_clients: Clients,
+    pub rooms: Rooms
 }
 
 /// Implement Drop trait for server. This way, when the server
 /// is dropped, the server thread will be closed
 impl Drop for Server {
     fn drop(&mut self) {
-        println!("Droping server {}...", self.port);
+        println!("Droping server ...");
         if let Some(thread) = self.receiver_thread.take() {
             if thread.join().is_err() {
-                println!("Error while closing receiver thread from {}", self.name);
+                println!("Error while closing receiver thread from ");
             }
         }
     }
 }
 
 impl Server {
-
-    pub fn new(
-        address: &str,
-        clients: &ClientMap,
-    ) -> Result<Server, ()> {
-        let (sender, receiver) = mpsc::channel();
-        let name = format!("server_{}", address);
-        let registered_clients = Arc::clone(clients);
-
+    pub fn new() -> Result<Server, ()> {
         Ok(Server {
-            name,
-            port: address.to_owned(),
-            address: address.to_string(),
-            sender: Arc::new(Mutex::new(sender)),
-            receiver: Arc::new(Mutex::new(receiver)),
             receiver_thread: None,
-            registered_clients,
-            socket: None,
+            registered_clients: Clients::new(),
+            rooms: Rooms::new()
         })
     }
 
-    /// This function will execute the reading thread of the receiver end point
-    /// of the server channel. It will handle each server signal.
-    pub fn read_from_recv(&mut self) {
-        let receiver = Arc::clone(&self.receiver);
-        let registered_clients = Arc::clone(&self.registered_clients);
-        self.receiver_thread = Some(thread::spawn(move || loop {
-            let receiver = receiver.lock().unwrap();
-            if let Ok(msg) = receiver.recv() {
-                 println!("Only server signals are accepted!");
-            }
-        }));
+    pub fn add_client(&mut self, client_id: u8, client_info: ClientInfo, stream: TcpStream) {
+        self.registered_clients.add_client(client_id, client_info, stream);
+    }
+
+    pub fn insert_client_to_room(&mut self, client_id: u8) -> Result<(), ()> {
+        let room_id = self.rooms.insert_client_to_room(client_id);
+        println!("Client id {} added to room {}", client_id, room_id);
+        Ok(())
     }
 
  
