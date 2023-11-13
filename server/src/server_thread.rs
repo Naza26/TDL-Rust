@@ -18,7 +18,13 @@ pub enum ServerMessage {
     /// Add client to an available room
     /// u8: id
     ///
-    AddClientToRoom(u8)
+    AddClientToRoom(u8),
+    ///
+    /// Send message from a client
+    /// u8: client id
+    /// String: msg
+    ///
+    SendMessageFromClient(u8, String)
 }
 
 
@@ -32,10 +38,12 @@ pub fn spawn_server_worker(
             match message {
                 ServerMessage::AddClient(client_id, client_info, stream) => {
                     server.add_client(client_id, client_info, stream);
-                    println!("server worker received add client message with name");
                 },
                 ServerMessage::AddClientToRoom(id) => {
                     server.insert_client_to_room(id).unwrap();
+                },
+                ServerMessage::SendMessageFromClient(client_id, msg) => {
+                    server.send_message_from_client(client_id, msg);
                 }
             }
         }

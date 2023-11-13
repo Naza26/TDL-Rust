@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-const CAPACITY: u8 = 6;
+const CAPACITY: u8 = 2;
 
 #[derive(Debug)]
 pub enum RoomState {
@@ -22,11 +22,11 @@ impl Rooms {
         }
     }
 
-    pub fn insert_client_to_room(&mut self, client_id: u8) -> u8 {
+    pub fn insert_client_to_room(&mut self, client_id: u8) -> (u8, bool) {
         for (id, room) in &mut self.rooms {
             if !room.is_full() {
-                room.add_client(client_id).unwrap();
-                return id.clone();
+                let is_full = room.add_client(client_id).unwrap();
+                return (id.clone(), is_full);
             }
         }
 
@@ -36,7 +36,7 @@ impl Rooms {
         self.rooms.insert(id, new_room);
         self.next_id += 1;
 
-        id
+        (id, false)
     }
 }
 
@@ -62,15 +62,31 @@ impl Room {
         })
     }
 
+    // returns if room is full
     pub fn add_client(
         &mut self,
         client_id: u8
-    ) -> Result<(), ()> {
+    ) -> Result<bool, ()> {
         if self.participants.len() as u8 >= self.capacity {
             return Err(());
         }
         self.participants.push(client_id);
-        Ok(())
+
+        if self.is_full() {
+            self.state = RoomState::STARTED;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    //NAZA DESPZ CAMBIA ESTO PARA QUE HAYA SALITAS DE CHAT ADENTRO DE LA SALA
+    pub fn get_chat_client(&self, client_id: u8) -> u8 {
+        for participant in &self.participants {
+            if participant.clone() != client_id {
+                return participant.clone();
+            }
+        }
+        return 255;
     }
 
     pub fn is_full(&self) -> bool {

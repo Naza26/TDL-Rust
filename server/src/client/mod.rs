@@ -9,6 +9,18 @@ pub struct ClientInfo {
     pub country: Option<String>
 }
 
+impl ClientInfo {
+    pub fn new(name: String,
+               age: String,
+               country: String) -> Self {
+        Self {
+            name: Some(name),
+            age: Some(age),
+            country: Some(country)
+        }
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Clients {
@@ -29,10 +41,15 @@ impl Clients {
         self.clients.insert(client_id, client);
         println!("client added, clients: {:?}", &self.clients);
     }
+
+    pub fn add_client_room(&mut self, client_id: u8, room_id: u8) {
+        self.clients.get_mut(&client_id).unwrap().add_room(room_id);
+    }
 }
 
 #[derive(Debug)]
 pub struct Client {
+    pub room_id: Option<u8>,
     pub client_info: Option<ClientInfo>,
     pub client_id: u8,
     pub socket: Option<TcpStream>
@@ -50,6 +67,7 @@ impl Clone for Client {
             }
         }
         Self {
+            room_id: self.room_id.clone(),
             client_id: self.client_id,
             socket,
             client_info: None
@@ -63,8 +81,13 @@ impl Client {
                socket: TcpStream) -> Self {
         Self {
             client_id,
+            room_id: Some(0),
             socket: Some(socket),
             client_info: Some(client_info)
         }
+    }
+
+    pub fn add_room(&mut self, room_id: u8) {
+        self.room_id = Some(room_id);
     }
 }

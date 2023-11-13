@@ -4,6 +4,7 @@ use std::net::TcpStream;
 use std::{
     thread::JoinHandle,
 };
+use std::io::Write;
 use crate::client::{ClientInfo, Clients};
 use crate::server::room::Rooms;
 
@@ -42,10 +43,38 @@ impl Server {
     }
 
     pub fn insert_client_to_room(&mut self, client_id: u8) -> Result<(), ()> {
-        let room_id = self.rooms.insert_client_to_room(client_id);
+        let (room_id, is_full) = self.rooms.insert_client_to_room(client_id);
+        self.registered_clients.add_client_room(client_id, room_id);
+        if is_full {
+            self.start_room(room_id);
+        }
         println!("Client id {} added to room {}", client_id, room_id);
         Ok(())
     }
 
+    fn start_room(&mut self, room_id: u8) {
+        let msg = "room started\n";
+        let payload = msg.as_bytes().to_vec();
+        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
+        for client_id in clients {
+            println!("sending message to client id {}", client_id);
+            let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        }
+        println!("room started");
+    }
+
+    pub fn send_message_from_client(&mut self, client_id: u8, mut msg: String) {
+        let room_id = self.registered_clients.clients.get(&client_id).unwrap().room_id;
+        if room_id.is_none() {
+            return;
+        }
+
+        msg += "\n";
+        println!("{:?}", msg);
+        let payload = msg.as_bytes().to_vec();
+        let client_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_chat_client(client_id);
+        println!("client {}", client_recv);
+        let _ = &self.registered_clients.clients.get(&client_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
+    }
  
 }

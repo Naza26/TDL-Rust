@@ -4,6 +4,7 @@ mod client;
 mod client_thread;
 mod server_thread;
 
+use serde_json::Value;
 use std::env::args;
 use std::io::{BufRead, BufReader};
 use std::net::{TcpListener, TcpStream};
@@ -57,26 +58,56 @@ fn handle_client(stream: &mut TcpStream, server_sender: Sender<ServerMessage>, c
         channel();
 
     println!("llegue :)");
-    let client_stream = stream.try_clone().unwrap();
 
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut buf = String::new();
-    match reader.read_line(&mut buf) {
-        Ok(_m) => {
-            // Deserialize the JSON string
-            match serde_json::from_str::<ClientInfo>(&buf) {
-                Ok(client_info) => {
+    loop {
+        match reader.read_line(&mut buf) {
+            Ok(_m) => {
+                // Deserialize the JSON string
+                println!("{:?}", &buf);
+                let json = serde_json::from_str::<Value>(&buf).unwrap();
+                if json["type"] == "CONNECT" {
+                    let age: String = json["data"]["age"].to_string();
+                    let name: String = json["data"]["name"].to_string();
+                    let country: String = json["data"]["country"].to_string();
+
+                    let client_info: ClientInfo = ClientInfo::new(name, age, country);
                     println!("{:?}", client_info);
+                    let client_stream = stream.try_clone().unwrap();
+
                     server_sender.send(ServerMessage::AddClient(client_id, client_info, client_stream)).unwrap();
                     server_sender.send(ServerMessage::AddClientToRoom(client_id)).unwrap();
+
+                } else if json["type"] == "MESSAGE" {
+                    let msg: String = serde_json::from_str::<String>(&json["data"].to_string()).unwrap();
+                    println!("{:?}", msg);
+
+                    server_sender.send(ServerMessage::SendMessageFromClient(client_id, msg)).unwrap();
                 }
-                Err(e) => {
-                    eprintln!("Error deserializing: {}", e);
-                }
-            }
-        },
-        Err(e) => println!("{}", e)
+                buf.clear();
+            },
+            Err(e) => println!("{}", e)
+        }
     }
-    Ok(())
 }
+
+/*
+
+{
+    type: "CONNECT",
+    data: {
+        age: 24,
+        name: Naza,
+        coutry: Argentina
+    }
+}
+{
+    type: "MESSAGE",
+    data: "blablabla"
+}
+{
+    type: "FINALIZE_CHAT"
+}
+ */
 
