@@ -55,6 +55,7 @@ impl Server {
     fn start_room(&mut self, room_id: u8) {
         let msg = "room started\n";
         let payload = msg.as_bytes().to_vec();
+        // Split participants across different sub-rooms.
         let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
         for client_id in clients {
             println!("sending message to client id {}", client_id);
@@ -72,9 +73,9 @@ impl Server {
         msg += "\n";
         println!("{:?}", msg);
         let payload = msg.as_bytes().to_vec();
-        let client_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_chat_client(client_id);
-        println!("client {}", client_recv);
-        let _ = &self.registered_clients.clients.get(&client_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
+            let client_id_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
+        println!("client {}", client_id_recv);
+        let _ = &self.registered_clients.clients.get(&client_id_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
     }
  
 }
