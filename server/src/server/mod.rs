@@ -76,9 +76,10 @@ impl Server {
         if room_id.is_none() {
             return;
         }
-
-        let client_id_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
+        let room = self.rooms.rooms.get_mut(&room_id.unwrap()).unwrap();
+        let client_id_recv = room.get_client_id_to_chat(client_id);
         println!("client {}", client_id_recv);
+
         let payload = messages::create_client_message(msg);
         let _ = &self.registered_clients.clients.get(&client_id_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
     }

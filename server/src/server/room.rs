@@ -90,7 +90,7 @@ impl Room {
 
     pub fn get_client_id_to_chat(&mut self, sender_client_id: u8) -> u8 {
         for (client_id, participants_chatting) in &self.participants_chatting {
-            if !participants_chatting.contains(&client_id) && client_id != sender_client_id {
+            if !participants_chatting.contains(&client_id) && client_id.clone() != sender_client_id {
                 return client_id.clone();
             }
         }
