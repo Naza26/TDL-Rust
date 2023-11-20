@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-const CAPACITY: u8 = 2;
+const CAPACITY: u8 = 10;
 
 #[derive(Debug)]
 pub enum RoomState {
@@ -23,8 +23,8 @@ impl Rooms {
     }
 
     pub fn insert_client_to_room(&mut self, client_id: u8) -> (u8, bool) {
-        for (id, room) in &mut self.rooms {
-            if !room.is_full() {
+        for (id, mut room) in self.rooms {
+            if !room.is_full() && !self.client_has_chatted_with_everyone_in_the_room(client_id, &id) {
                 let is_full = room.add_client(client_id).unwrap();
                 return (id.clone(), is_full);
             }
@@ -38,13 +38,19 @@ impl Rooms {
 
         (id, false)
     }
+
+    fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8, room_id: &u8) -> bool {
+        let room = self.rooms.get(room_id).unwrap();
+        let participants_chatting = room.participants_chatting.get(&client_id).unwrap();
+        participants_chatting.len() as u8 == room.capacity
+    }
 }
 
 
 #[derive(Debug)]
 pub struct Room {
     pub id: u8,
-    pub participants: Vec<u8>,
+    pub participants_in_room: Vec<u8>,
     pub participants_chatting: HashMap<u8, Vec<u8>>,
     pub capacity: u8,
     pub state: RoomState
@@ -57,7 +63,7 @@ impl Room {
     ) -> Result<Room, ()> {
         Ok(Room {
             id,
-            participants: Vec::new(),
+            participants_in_room: Vec::new(),
             participants_chatting: HashMap::new(),
             capacity,
             state: RoomState::WAITING
@@ -69,10 +75,11 @@ impl Room {
         &mut self,
         client_id: u8
     ) -> Result<bool, ()> {
-        if self.participants.len() as u8 >= self.capacity {
+        if self.participants_in_room.len() as u8 >= self.capacity {
             return Err(());
         }
-        self.participants.push(client_id);
+        self.participants_in_room.push(client_id);
+        self.participants_chatting.insert(client_id, Vec::new());
 
         if self.is_full() {
             self.state = RoomState::STARTED;
@@ -81,29 +88,17 @@ impl Room {
         Ok(false)
     }
 
-    //NAZA DESPZ CAMBIA ESTO PARA QUE HAYA SALITAS DE CHAT ADENTRO DE LA SALA
-    pub fn get_client_id_to_chat(&self, client_id: u8) -> u8 {
-        for participant in &self.participants {
-            if participant.clone() != client_id {
-                return participant.clone();
+    pub fn get_client_id_to_chat(&mut self, sender_client_id: u8) -> u8 {
+        for (client_id, participants_chatting) in &self.participants_chatting {
+            if !participants_chatting.contains(&client_id) && client_id != sender_client_id {
+                return client_id.clone();
             }
         }
-        return 255;
+        255
     }
 
-    pub fn get_pair_of_participants_to_start_chatting(&self) -> Option<(u8, u8)> {
-
-        self.initialize_participants_to_chat();
-
-    }
-
-    fn initialize_participants_to_chat(&self) {
-        for &participant_id in &self.participants {
-            self.participants_chatting.entry(participant_id).or_insert(Vec::new());
-        }
-    }
 
     pub fn is_full(&self) -> bool {
-        self.participants.len() as u8 == self.capacity
+        self.participants_in_room.len() as u8 == self.capacity
     }
 }

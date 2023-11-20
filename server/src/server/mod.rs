@@ -63,7 +63,7 @@ impl Server {
     fn start_room(&mut self, room_id: u8) {
         let payload = messages::create_room_started_message();
         // Split participants across different sub-rooms.
-        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
+        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room;
         for client_id in clients {
             println!("sending message to client id {}", client_id);
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
@@ -79,7 +79,6 @@ impl Server {
 
         let client_id_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
         println!("client {}", client_id_recv);
-
         let payload = messages::create_client_message(msg);
         let _ = &self.registered_clients.clients.get(&client_id_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
     }
