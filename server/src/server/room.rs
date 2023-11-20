@@ -89,6 +89,20 @@ impl Room {
         return 255;
     }
 
+    pub fn get_rest_of_participants(&self, client_id: u8) -> Vec<u8> {
+        let mut participants = Vec::new();
+        for participant in &self.participants {
+            if participant.clone() != client_id {
+                participants.push(participant.clone());
+            }
+        }
+        return participants;
+    }
+
+    pub fn should_finish_chat(&self) -> bool {
+        true
+    }
+
     pub fn is_full(&self) -> bool {
         self.participants.len() as u8 == self.capacity
     }

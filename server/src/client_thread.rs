@@ -17,10 +17,8 @@ pub fn handle_client(stream: &mut TcpStream, server_sender: Sender<ServerMessage
                 // Deserialize the JSON string
                 println!("{:?}", &buf);
                 let json = serde_json::from_str::<Value>(&buf).unwrap();
-                println!("{:?}", json);
                 if json["type"] == "CONNECT" {
                     let data = serde_json::from_value::<Value>(json["data"].clone()).unwrap();
-                    println!("{:?}", data);
                     let age: String = serde_json::from_value::<String>(data["age"].clone()).unwrap();
                     let name: String = serde_json::from_value::<String>(data["name"].clone()).unwrap();
                     let country: String = serde_json::from_value::<String>(data["country"].clone()).unwrap();
@@ -34,9 +32,12 @@ pub fn handle_client(stream: &mut TcpStream, server_sender: Sender<ServerMessage
 
                 } else if json["type"] == "MESSAGE" {
                     let msg: String = serde_json::from_str::<String>(&json["data"].to_string()).unwrap();
-                    println!("{:?}", msg);
-
                     server_sender.send(ServerMessage::SendMessageFromClient(client_id, msg)).unwrap();
+                } else if json["type"] == "QUIT_CHATTING" {
+                    server_sender.send(ServerMessage::FinishChattingFromClient(client_id)).unwrap();
+                } else if json["type"] == "CHOOSE_PARTICIPANTS" {
+                    let data = serde_json::from_value::<Vec<u8>>(json["data"].clone()).unwrap();
+                    server_sender.send(ServerMessage::ChooseParticipants(client_id, data)).unwrap();
                 }
                 buf.clear();
             },
