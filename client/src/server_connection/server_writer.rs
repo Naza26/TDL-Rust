@@ -1,6 +1,6 @@
 use std::io::Write;
 use std::net::TcpStream;
-use crate::commons::messages::{create_choose_participants_message, create_client_info_string, create_client_message, create_quit_chatting_string};
+use crate::commons::messages::{create_add_new_room_message, create_choose_participants_message, create_client_info_string, create_client_message, create_quit_chatting_string};
 use crate::commons::process_client_info::process_client_info;
 
 
@@ -28,4 +28,8 @@ pub fn send_quit_message(socket: &mut TcpStream) {
 
 pub fn send_choose_participants_message(line: String, socket: &mut TcpStream) {
     write_to_socket(&create_choose_participants_message(line), socket);
+}
+
+pub fn send_add_room_message(socket: &mut TcpStream) {
+    write_to_socket(&create_add_new_room_message(), socket);
 }

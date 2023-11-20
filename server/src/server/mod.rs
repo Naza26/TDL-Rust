@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::io::Write;
 use crate::client::{ClientInfo, Clients};
 use crate::commons::messages;
-use crate::server::room::Rooms;
+use crate::server::room::{Rooms, RoomState};
 
 
 
@@ -65,10 +65,9 @@ impl Server {
         let payload = messages::create_room_started_message();
         let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
         for client_id in clients {
-            println!("sending message to client id {}", client_id);
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         }
-        println!("room started");
+        println!("Room {} started", room_id);
     }
 
     pub fn finish_chat_room(&mut self, client_id: u8) {
@@ -95,9 +94,11 @@ impl Server {
     }
 
     fn finish_room(&mut self, room_id: u8) {
+        self.rooms.rooms.get_mut(&room_id).unwrap().state = RoomState::ENDED;
+
         let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
         for client_id in clients {
-            println!("sending message to client id {} for finishing room", client_id);
+            println!("Sending message to client id {} for finishing room", client_id);
             let list_participants = self.rooms.rooms.get(&room_id).unwrap().get_rest_of_participants(client_id.clone());
             let payload = messages::create_list_participants_message(self.create_participants_hashmap(list_participants));
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
@@ -126,9 +127,26 @@ impl Server {
     }
 
     pub fn choose_participant_from_client(&mut self, client_id: u8, participants: Vec<u8>) {
-        println!("client {} chose participants: {:?}", client_id, &participants);
+        println!("Client {} chose participants: {:?}", client_id, &participants);
         let payload = messages::create_participants_chosen_message();
         let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+
+        let room_id = self.registered_clients.clients.get(&client_id).unwrap().room_id;
+        if let Some(room_id) = room_id {
+            self.rooms.add_client_choice_in_room(room_id, client_id, participants);
+
+            if self.rooms.rooms.get(&room_id).unwrap().should_start_matching() {
+                println!("Start matching in room {}", room_id);
+                self.start_matching(room_id);
+            }
+        }
     }
- 
+
+    fn start_matching(&self, room_id: u8) {
+        let matches = self.rooms.rooms.get(&room_id).unwrap().start_matching();
+        for (client_id, client_matches) in matches {
+            let payload = messages::create_matching_result_message(client_matches);
+            let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        }
+    }
 }

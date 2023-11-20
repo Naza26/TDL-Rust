@@ -2,22 +2,26 @@ use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{Receiver, RecvTimeoutError};
+use std::time::Duration;
 use serde_json::Value;
 use crate::commons::client_state::ClientState;
 
 // Reads constantly from buffer until connection to server is lost
-pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>) {
+pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>, rx: Receiver<bool>) {
+    socket.set_read_timeout(Some(Duration::new(2, 0))).unwrap();
     let mut reader = BufReader::new(socket.try_clone().unwrap());
     loop {
+        let message: Result<bool, RecvTimeoutError> = rx.recv_timeout(Duration::from_millis(500));
+        if let Ok(should_finish_app) = message {
+            if should_finish_app {
+                return;
+            }
+        }
+
         let mut buf = String::new();
         match reader.read_line(&mut buf) {
-            Err(e) => {
-                println!("Error while reading from socket!: {}", e);
-                break;
-            }
             Ok(_m) => {
-                // Deserialize the JSON string
-                //println!("{:?}", &buf); //todo: sacar
                 let json = serde_json::from_str::<Value>(&buf).unwrap();
                 if json["type"] == "CONNECTED" {
                     println!("Connected to server");
@@ -51,9 +55,17 @@ pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>) {
                     if let Ok(mut client_state_locked) = client_state.lock() {
                         *client_state_locked = ClientState::Waiting;
                     }
+                } else if json["type"] == "MATCHING_RESULT" {
+                    let clients_matched: Vec<u8> = serde_json::from_str::<Vec<u8>>(&json["data"].to_string()).unwrap();
+                    println!("Clients matched: {:?}", clients_matched);
+                    if let Ok(mut client_state_locked) = client_state.lock() {
+                        *client_state_locked = ClientState::AddNewRoom;
+                    }
+                    println!("Do you want to enter another room? [yes/no]");
                 }
                 buf.clear();
             }
+            Err(_e) => {}
         };
     }
 }

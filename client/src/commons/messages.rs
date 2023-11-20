@@ -41,3 +41,10 @@ fn create_participants_vector(line: String) -> Vec<Value> {
     }
     participants_vector
 }
+
+pub fn create_add_new_room_message() -> String {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("ADD_ROOM".to_string()));
+
+    serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string()
+}

@@ -38,6 +38,11 @@ impl Rooms {
 
         (id, false)
     }
+
+    pub fn add_client_choice_in_room(&mut self, room_id: u8, client_id: u8, participants: Vec<u8>) {
+        let room = self.rooms.get_mut(&room_id).unwrap();
+        room.add_client_choice(client_id, participants);
+    }
 }
 
 
@@ -46,7 +51,8 @@ pub struct Room {
     pub id: u8,
     pub participants: Vec<u8>,
     pub capacity: u8,
-    pub state: RoomState
+    pub state: RoomState,
+    pub clients_choice: HashMap<u8, Vec<u8>>
 }
 
 impl Room {
@@ -58,7 +64,8 @@ impl Room {
             id,
             participants: Vec::new(),
             capacity,
-            state: RoomState::WAITING
+            state: RoomState::WAITING,
+            clients_choice: HashMap::new()
         })
     }
 
@@ -105,5 +112,43 @@ impl Room {
 
     pub fn is_full(&self) -> bool {
         self.participants.len() as u8 == self.capacity
+    }
+
+    pub fn add_client_choice(&mut self, client_id: u8, participants: Vec<u8>) {
+        self.clients_choice.insert(client_id, participants);
+        println!("{:?}", &self.clients_choice);
+    }
+
+    pub fn should_start_matching(&self) -> bool {
+        if self.clients_choice.len() as u8 == self.capacity {
+            return true
+        }
+        false
+    }
+
+    pub fn start_matching(&self) -> HashMap<u8, Vec<u8>> {
+        let mut choice = HashMap::new();
+
+        for (client_id, participants) in &self.clients_choice {
+            let mut client_match = Vec::new();
+            for participant in participants {
+                if self.is_client_choice(client_id.clone(), participant.clone()) {
+                    client_match.push(participant.clone());
+                }
+            }
+            choice.insert(client_id.clone(), client_match);
+        }
+
+        choice
+    }
+
+    fn is_client_choice(&self, client_id: u8, client_to_match: u8) -> bool {
+        let client_to_match_choices = self.clients_choice.get(&client_to_match).unwrap();
+        for choice in client_to_match_choices {
+            if choice == &client_id {
+                return true
+            }
+        }
+        false
     }
 }

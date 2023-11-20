@@ -1,11 +1,12 @@
 use std::io::{BufRead, stdin, Stdin};
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::Sender;
 use std::thread;
 use crate::commons::client_state::ClientState;
-use crate::server_connection::server_writer::{send_choose_participants_message, send_message, send_quit_message};
+use crate::server_connection::server_writer::{send_add_room_message, send_choose_participants_message, send_message, send_quit_message};
 
-pub fn start_reading_input(mut socket: TcpStream, client_state: Arc<Mutex<ClientState>>) {
+pub fn start_reading_input(mut socket: TcpStream, client_state: Arc<Mutex<ClientState>>, tx: Sender<bool>) {
     thread::spawn(move || {
         let stdin: Stdin = stdin();
         for line in stdin.lock().lines() {
@@ -22,6 +23,15 @@ pub fn start_reading_input(mut socket: TcpStream, client_state: Arc<Mutex<Client
                     },
                     ClientState::ChoosingMatch => {
                         send_choose_participants_message(l, &mut socket);
+                    },
+                    ClientState::AddNewRoom => {
+                        if l == "yes".to_string() {
+                            send_add_room_message(&mut socket);
+                        } else if l == "no".to_string() {
+                            println!("Finishing app");
+                            tx.send(true).unwrap();
+                            return;
+                        }
                     }
                 }
             }

@@ -4,6 +4,7 @@ mod server_connection;
 use std::env::args;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
 use crate::commons::client_state::ClientState;
 use crate::commons::input::start_reading_input;
 
@@ -29,8 +30,9 @@ pub fn connect() {
 
     send_client_info(&mut socket);
 
-    start_reading_input(socket.try_clone().unwrap(), client_state.clone());
-    listen_from(socket.try_clone().unwrap(), client_state);
+    let (tx, rx): (Sender<bool>, Receiver<bool>) = channel();
+    start_reading_input(socket.try_clone().unwrap(), client_state.clone(), tx);
+    listen_from(socket.try_clone().unwrap(), client_state, rx);
 }
 
 fn main() {

@@ -2,5 +2,6 @@
 pub enum ClientState {
     Waiting,
     Chatting,
-    ChoosingMatch
+    ChoosingMatch,
+    AddNewRoom
 }
