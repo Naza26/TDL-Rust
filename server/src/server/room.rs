@@ -23,10 +23,10 @@ impl Rooms {
     }
 
     pub fn insert_client_to_room(&mut self, client_id: u8) -> (u8, bool) {
-        for (id, mut room) in self.rooms {
-            if !room.is_full() && !self.client_has_chatted_with_everyone_in_the_room(client_id, &id) {
+        for (id, room) in &mut self.rooms {
+            if !room.is_full() && !room.client_has_chatted_with_everyone_in_the_room(client_id) {
                 let is_full = room.add_client(client_id).unwrap();
-                return (id.clone(), is_full);
+                return (*id, is_full);
             }
         }
 
@@ -39,11 +39,6 @@ impl Rooms {
         (id, false)
     }
 
-    fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8, room_id: &u8) -> bool {
-        let room = self.rooms.get(room_id).unwrap();
-        let participants_chatting = room.participants_chatting.get(&client_id).unwrap();
-        participants_chatting.len() as u8 == room.capacity
-    }
 }
 
 
@@ -90,11 +85,16 @@ impl Room {
 
     pub fn get_client_id_to_chat(&mut self, sender_client_id: u8) -> u8 {
         for (client_id, participants_chatting) in &self.participants_chatting {
-            if !participants_chatting.contains(&client_id) && client_id.clone() != sender_client_id {
-                return client_id.clone();
+            if !participants_chatting.contains(client_id) && *client_id != sender_client_id {
+                return client_id.to_owned();
             }
         }
         255
+    }
+
+    pub fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8) -> bool {
+        let participants_chatting = self.participants_chatting.get(&client_id).unwrap();
+        participants_chatting.len() as u8 == self.capacity
     }
 
 

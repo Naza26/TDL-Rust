@@ -67,7 +67,7 @@ impl Clone for Client {
             }
         }
         Self {
-            room_id: self.room_id.clone(),
+            room_id: self.room_id,
             client_id: self.client_id,
             socket,
             client_info: None
