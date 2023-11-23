@@ -45,6 +45,10 @@ impl Clients {
     pub fn add_client_room(&mut self, client_id: u8, room_id: u8) {
         self.clients.get_mut(&client_id).unwrap().add_room(room_id);
     }
+
+    pub fn get_client_name(&self, client_id: u8) -> String {
+        self.clients.get(&client_id).unwrap().client_info.as_ref().unwrap().name.clone().unwrap()
+    }
 }
 
 #[derive(Debug)]

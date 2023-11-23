@@ -43,4 +43,50 @@ pub fn create_client_message(line: String) -> Vec<u8> {
     message.as_bytes().to_vec()
 }
 
+pub fn create_list_participants_message(participants: HashMap<u8, String>) -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("PARTICIPANTS".to_string()));
 
+    let data: Value = serde_json::to_value(&participants).expect("Failed to serialize participants to JSON");
+    msg.insert("data".to_string(), data);
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
+pub fn create_quit_chatting_message() -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("QUIT_CHATTING".to_string()));
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
+pub fn create_participants_chosen_message() -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("PARTICIPANTS_CHOSEN".to_string()));
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
+pub fn create_matching_result_message(matches: Vec<u8>) -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("MATCHING_RESULT".to_string()));
+    msg.insert("data".to_string(), Value::Array(create_clients_match_vector(matches)));
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
+fn create_clients_match_vector(matches: Vec<u8>) -> Vec<Value> {
+    let mut clients_match_vector = Vec::new();
+    for m in matches {
+        clients_match_vector.push(Value::Number(m.into()));
+    }
+    clients_match_vector
+}

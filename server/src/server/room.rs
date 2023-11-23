@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-const CAPACITY: u8 = 10;
+const CAPACITY: u8 = 2;
 
 #[derive(Debug)]
 pub enum RoomState {
@@ -38,7 +38,6 @@ impl Rooms {
 
         (id, false)
     }
-
 }
 
 
@@ -48,7 +47,8 @@ pub struct Room {
     pub participants_in_room: Vec<u8>,
     pub participants_chatting: HashMap<u8, Vec<u8>>,
     pub capacity: u8,
-    pub state: RoomState
+    pub state: RoomState,
+    pub clients_choice: HashMap<u8, Vec<u8>>
 }
 
 impl Room {
@@ -61,7 +61,8 @@ impl Room {
             participants_in_room: Vec::new(),
             participants_chatting: HashMap::new(),
             capacity,
-            state: RoomState::WAITING
+            state: RoomState::WAITING,
+            clients_choice: HashMap::new()
         })
     }
 
@@ -89,7 +90,7 @@ impl Room {
                 return client_id.to_owned();
             }
         }
-        255
+        return 255;
     }
 
     pub fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8) -> bool {
@@ -98,7 +99,59 @@ impl Room {
     }
 
 
+    pub fn get_rest_of_participants(&self, client_id: u8) -> Vec<u8> {
+        let mut participants = Vec::new();
+        for participant in &self.participants {
+            if participant.clone() != client_id {
+                participants.push(participant.clone());
+            }
+        }
+        return participants;
+    }
+
+    pub fn should_finish_chat(&self) -> bool {
+        true
+    }
+
     pub fn is_full(&self) -> bool {
         self.participants_in_room.len() as u8 == self.capacity
+    }
+
+    pub fn add_client_choice(&mut self, client_id: u8, participants: Vec<u8>) {
+        self.clients_choice.insert(client_id, participants);
+        println!("{:?}", &self.clients_choice);
+    }
+
+    pub fn should_start_matching(&self) -> bool {
+        if self.clients_choice.len() as u8 == self.capacity {
+            return true
+        }
+        false
+    }
+
+    pub fn start_matching(&self) -> HashMap<u8, Vec<u8>> {
+        let mut choice = HashMap::new();
+
+        for (client_id, participants) in &self.clients_choice {
+            let mut client_match = Vec::new();
+            for participant in participants {
+                if self.is_client_choice(client_id.clone(), participant.clone()) {
+                    client_match.push(participant.clone());
+                }
+            }
+            choice.insert(client_id.clone(), client_match);
+        }
+
+        choice
+    }
+
+    fn is_client_choice(&self, client_id: u8, client_to_match: u8) -> bool {
+        let client_to_match_choices = self.clients_choice.get(&client_to_match).unwrap();
+        for choice in client_to_match_choices {
+            if choice == &client_id {
+                return true
+            }
+        }
+        false
     }
 }

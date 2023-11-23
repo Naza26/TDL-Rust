@@ -1,13 +1,15 @@
 mod commons;
-mod server_reader;
-mod server_writer;
+mod server_connection;
 
 use std::env::args;
-use std::io::{BufRead, Stdin, stdin};
 use std::net::TcpStream;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Receiver, Sender};
+use crate::commons::client_state::ClientState;
+use crate::commons::input::start_reading_input;
 
-use crate::server_reader::listen_from;
-use crate::server_writer::{client_run, send_client_info};
+use crate::server_connection::server_reader::listen_from;
+use crate::server_connection::server_writer::send_client_info;
 
 static CLIENT_ARGS: usize = 3;
 
@@ -24,15 +26,13 @@ pub fn connect() {
 
     let mut socket = TcpStream::connect(address).unwrap();
 
-    listen_from(&mut socket);
+    let client_state = Arc::new(Mutex::new(ClientState::Waiting));
 
     send_client_info(&mut socket);
 
-    let stdin: Stdin = stdin();
-    for line in stdin.lock().lines() {
-        let l = line.unwrap();
-        client_run(l, &mut socket).expect("Panic");
-    }
+    let (tx, rx): (Sender<bool>, Receiver<bool>) = channel();
+    start_reading_input(socket.try_clone().unwrap(), client_state.clone(), tx);
+    listen_from(socket.try_clone().unwrap(), client_state, rx);
 }
 
 fn main() {

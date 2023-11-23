@@ -24,7 +24,18 @@ pub enum ServerMessage {
     /// u8: client id
     /// String: msg
     ///
-    SendMessageFromClient(u8, String)
+    SendMessageFromClient(u8, String),
+    ///
+    /// Finish chatting with the client
+    /// u8: client id
+    ///
+    FinishChattingFromClient(u8),
+    ///
+    /// Choose participants
+    /// u8: client id
+    /// Vec<u8>: list of participants the client chose
+    ///
+    ChooseParticipants(u8, Vec<u8>)
 }
 
 
@@ -44,6 +55,12 @@ pub fn spawn_server_worker(
                 },
                 ServerMessage::SendMessageFromClient(client_id, msg) => {
                     server.send_message_from_client(client_id, msg);
+                },
+                ServerMessage::FinishChattingFromClient(client_id) => {
+                    server.finish_chat_room(client_id);
+                },
+                ServerMessage::ChooseParticipants(client_id, participants) => {
+                    server.choose_participant_from_client(client_id, participants);
                 }
             }
         }
