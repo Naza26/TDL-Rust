@@ -38,6 +38,11 @@ impl Rooms {
 
         (id, false)
     }
+
+    pub fn add_client_choice_in_room(&mut self, room_id: u8, client_id: u8, participants: Vec<u8>) {
+        let room = self.rooms.get_mut(&room_id).unwrap();
+        room.add_client_choice(client_id, participants);
+    }
 }
 
 
@@ -101,7 +106,7 @@ impl Room {
 
     pub fn get_rest_of_participants(&self, client_id: u8) -> Vec<u8> {
         let mut participants = Vec::new();
-        for participant in &self.participants {
+        for participant in &self.participants_in_room {
             if participant.clone() != client_id {
                 participants.push(participant.clone());
             }
