@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-const CAPACITY: u8 = 2;
+const CAPACITY: u8 = 4;
 
 #[derive(Debug)]
 pub enum RoomState {
@@ -50,7 +50,8 @@ impl Rooms {
 pub struct Room {
     pub id: u8,
     pub participants_in_room: Vec<u8>,
-    pub participants_chatting: HashMap<u8, Vec<u8>>,
+    pub history_of_chats: HashMap<u8, Vec<u8>>,
+    pub participants_chatting: HashMap<u8, Option<u8>>,
     pub capacity: u8,
     pub state: RoomState,
     pub clients_choice: HashMap<u8, Vec<u8>>
@@ -64,6 +65,7 @@ impl Room {
         Ok(Room {
             id,
             participants_in_room: Vec::new(),
+            history_of_chats: HashMap::new(),
             participants_chatting: HashMap::new(),
             capacity,
             state: RoomState::WAITING,
@@ -80,7 +82,8 @@ impl Room {
             return Err(());
         }
         self.participants_in_room.push(client_id);
-        self.participants_chatting.insert(client_id, Vec::new());
+        self.history_of_chats.insert(client_id, Vec::new());
+        self.participants_chatting.insert(client_id, None);
 
         if self.is_full() {
             self.state = RoomState::STARTED;
@@ -89,18 +92,52 @@ impl Room {
         Ok(false)
     }
 
-    pub fn get_client_id_to_chat(&mut self, sender_client_id: u8) -> u8 {
-        for (client_id, participants_chatting) in &self.participants_chatting {
-            if !participants_chatting.contains(client_id) && *client_id != sender_client_id {
-                return client_id.to_owned();
+    pub fn get_client_id_to_chat(&mut self, sender_client_id: u8) -> Option<u8> {
+        println!("participants chatting: {:?}", self.history_of_chats);
+        println!("participants in room: {:?}", self.participants_in_room);
+        println!("sender client id: {}", sender_client_id);
+        if self.participants_chatting.get(&sender_client_id).unwrap().is_some() {
+            return Some(self.participants_chatting.get(&sender_client_id).unwrap().unwrap());
+        }
+
+        let mut found_client_id = None;
+
+        for (client_id, chatted_participants) in &self.history_of_chats {
+            if !chatted_participants.contains(&sender_client_id)
+                && *client_id != sender_client_id
+                && self.participants_chatting.get(client_id).unwrap().is_none() {
+                found_client_id = Some(client_id.clone());
+                break;
             }
         }
-        return 255;
+
+        if found_client_id.is_none() {
+            return None;
+        }
+
+        let mut client_2_chat = self.participants_chatting.get_mut(&found_client_id.unwrap()).unwrap();
+        *client_2_chat = Some(sender_client_id);
+        let mut client_1_chat = self.participants_chatting.get_mut(&sender_client_id).unwrap();
+        *client_1_chat = Some(found_client_id.clone().unwrap());
+        let mut client_2_history = self.history_of_chats.get_mut(&found_client_id.unwrap()).unwrap();
+        client_2_history.push(sender_client_id);
+        let mut client_1_history = self.history_of_chats.get_mut(&sender_client_id).unwrap();
+        client_1_history.push(found_client_id.clone().unwrap());
+
+        found_client_id
     }
 
+
     pub fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8) -> bool {
-        let participants_chatting = self.participants_chatting.get(&client_id).unwrap();
-        participants_chatting.len() as u8 == self.capacity
+        let participants_chatting = self.history_of_chats.get(&client_id);
+        if let Some(participants_chatting) = participants_chatting {
+            if participants_chatting.len() as u8 == self.capacity {
+                return true
+            }
+        } else {
+            return false
+        }
+        return false
     }
 
 
@@ -114,7 +151,12 @@ impl Room {
         return participants;
     }
 
-    pub fn should_finish_chat(&self) -> bool {
+    pub fn should_finish_room(&self) -> bool {
+        for (_client_id, participants) in &self.history_of_chats {
+            if (participants.len() as u8) < self.capacity - 1 {
+                return false
+            }
+        }
         true
     }
 
@@ -158,5 +200,12 @@ impl Room {
             }
         }
         false
+    }
+
+    pub fn finish_chat(&mut self, client_id: u8, client_recv: u8) {
+        let value_first_client = self.participants_chatting.get_mut(&client_id).unwrap();
+        *value_first_client = None;
+        let value_second_client = self.participants_chatting.get_mut(&client_recv).unwrap();
+        *value_second_client = None;
     }
 }
