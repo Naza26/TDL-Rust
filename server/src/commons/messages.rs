@@ -33,6 +33,16 @@ pub fn create_room_started_message() -> Vec<u8> {
     message.as_bytes().to_vec()
 }
 
+pub fn create_chat_room_started_message(client_id: u8) -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("CHAT_ROOM_STARTED".to_string()));
+    msg.insert("data".to_string(), Value::Number(client_id.into()));
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize connected message to JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
 pub fn create_client_message(line: String) -> Vec<u8> {
     let mut msg = HashMap::new();
     msg.insert("type".to_string(), "MESSAGE".to_string());
