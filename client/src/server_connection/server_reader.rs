@@ -31,11 +31,16 @@ pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>, rx:
                     println!("Added to room id: {}", room_id);
                 } else if json["type"] == "ROOM_STARTED" {
                     println!("Room started");
-                    println!("Type 'quit' to finish chat"); //todo: mover a sala de chat
+                }
+                else if json["type"] == "CHAT_ROOM_STARTED" {
+                    let client_id: u8 = serde_json::from_str::<u8>(&json["data"].to_string()).unwrap();
+                    println!("Started chatting with client id: {}", client_id);
+                    println!("Type 'quit' to finish chat");
                     if let Ok(mut client_state_locked) = client_state.lock() {
                         *client_state_locked = ClientState::Chatting;
                     }
-                } else if json["type"] == "MESSAGE" {
+                }
+                else if json["type"] == "MESSAGE" {
                     let msg: String = serde_json::from_str::<String>(&json["data"].to_string()).unwrap();
                     println!("Received chat message: {}", msg);
                 } else if json["type"] == "QUIT_CHATTING" {

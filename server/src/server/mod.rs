@@ -63,11 +63,24 @@ impl Server {
 
     fn start_room(&mut self, room_id: u8) {
         let payload = messages::create_room_started_message();
-        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
+        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room;
         for client_id in clients {
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         }
         println!("Room {} started", room_id);
+        self.assign_participants_to_chat_pairs_in_room(room_id);
+    }
+
+    fn assign_participants_to_chat_pairs_in_room(&mut self, room_id: u8) {
+        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room.clone();
+
+        for client in clients {
+            let client_recv_id = &self.rooms.rooms.get_mut(&room_id).unwrap().get_client_id_to_chat(client.clone());
+            if let Some(client_id) = client_recv_id {
+                let payload = messages::create_chat_room_started_message(client_id.clone());
+                let _ = &self.registered_clients.clients.get(client).unwrap().socket.as_ref().unwrap().write_all(&payload);
+            }
+        }
     }
 
     pub fn finish_chat_room(&mut self, client_id: u8) {
@@ -79,14 +92,21 @@ impl Server {
         }
 
         // finish chat room
-        let client_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_chat_client(client_id);
+        let mut rooms = &mut self.rooms.rooms;
+        let client_recv = rooms.get_mut(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
+
+        if client_recv.is_none() {
+            return;
+        }
 
         let payload = messages::create_quit_chatting_message();
         let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
-        let _ = &self.registered_clients.clients.get(&client_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        let _ = &self.registered_clients.clients.get(&client_recv.unwrap()).unwrap().socket.as_ref().unwrap().write_all(&payload);
+
+        self.rooms.rooms.get_mut(&room_id.unwrap()).unwrap().finish_chat(client_id, client_recv.unwrap());
 
         // finish room
-        let should_finish = self.rooms.rooms.get(&room_id.unwrap()).unwrap().should_finish_chat();
+        let should_finish = self.rooms.rooms.get(&room_id.unwrap()).unwrap().should_finish_room();
 
         if should_finish {
             self.finish_room(room_id.unwrap());
@@ -96,7 +116,7 @@ impl Server {
     fn finish_room(&mut self, room_id: u8) {
         self.rooms.rooms.get_mut(&room_id).unwrap().state = RoomState::ENDED;
 
-        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants;
+        let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room;
         for client_id in clients {
             println!("Sending message to client id {} for finishing room", client_id);
             let list_participants = self.rooms.rooms.get(&room_id).unwrap().get_rest_of_participants(client_id.clone());
@@ -120,10 +140,17 @@ impl Server {
             return;
         }
 
-        let client_recv = self.rooms.rooms.get(&room_id.unwrap()).unwrap().get_chat_client(client_id);
+        let mut rooms = &mut self.rooms.rooms;
+        let client_recv = rooms.get_mut(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
+
+        if client_recv.is_none() {
+            return;
+        }
+
+        println!("client {}", client_recv.unwrap());
 
         let payload = messages::create_client_message(msg);
-        let _ = &self.registered_clients.clients.get(&client_recv).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        let _ = &self.registered_clients.clients.get(&client_recv.unwrap()).unwrap().socket.as_ref().unwrap().write_all(&payload);
     }
 
     pub fn choose_participant_from_client(&mut self, client_id: u8, participants: Vec<u8>) {
