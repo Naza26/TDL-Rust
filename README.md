@@ -159,5 +159,23 @@ Cargo es el sistema de compilación y el administrador de paquetes de Rust. Desc
 ### Concurrencia
 
 
+## Bibliografía / Recursos
+
+[Características del Lenguaje](https://en.wikipedia.org/wiki/Rust_(programming_language)#:~:text=Rust%20grew%20out%20of%20a,announced%20by%20Mozilla%20in%202010)
+
+[Paradigmas que soporta](https://rust-unofficial.github.io/patterns/functional/paradigms.html)
+
+[Paradigmas de programación](https://en.wikipedia.org/wiki/Programming_paradigm)
+
+[Hilos de discusión sobre Rust como lenguaje](https://www.reddit.com/r/rust/comments/cseulx/is_rust_a_new_paradigmclass_of_programing/?onetap_auto=true)
+
+[Artículo sobre beneficios de Rust](https://github.blog/2023-08-30-why-rust-is-the-most-admired-language-among-developers/#:~:text=Rust%20was%20originally%20created%20to,memory%20and%20performance%20is%20crucial.)
+
+[Popularidad de Rust](https://stackoverflow.blog/2020/01/20/what-is-rust-and-why-is-it-so-popular/)
+
+
+
+
+
 
 
