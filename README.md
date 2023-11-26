@@ -77,13 +77,49 @@ fn main() {
 
 ### Closures
 
+En términos funcionales, un closure es un scope persistente que retiene las variables locales incluso después de que la ejecución del código haya salido de ese bloque.
+Viendo la perspectiva de los closures dentro del paradigma de POO, podemos entender a los closures como la parametrización de comportamiento.
+
+Ejemplo de Closures con parámetros:
+
+```rust
+let suma = |n1, n2| n1 + n2;
+```
+
+Ejemplo de Closures sin parámetros:
+
+```rust
+let saludo = || println!("Hello, world!");
+```
+
+
 ### Types
 
 ### Punteros / Referencias
 
+Rust está diseñado para ser seguro para la memoria. No permite punteros nulos, punteros colgantes ni race conditions. Los valores de datos requieren que sus entradas ya estén inicializadas.
+Rust no utiliza garbage collector automatizado. La memoria y otros recursos se gestionan mediante la convención de inicialización anteriormente mencionada
+Los valores se asignan en el stack de forma predeterminada y todas las asignaciones dinámicas deben ser explícitas.
+
 ### Azucar Sintáctica
 
 ### Ownership
+
+El sistema de ownership de Rust consta de reglas que garantizan la seguridad de la memoria sin utilizar un garbage collector. En tiempo de ejecución, cada valor debe estar asociado a una variable denominada owner de ese valor, y cada valor debe tener exactamente un owner.
+Los valores se mueven entre diferentes owners mediante asignación o pasando un valor como parámetro de función. Los valores también se pueden tomar prestados, lo que significa que se pasan temporalmente a una función diferente antes de devolverlos al owner. Con estas reglas, Rust puede evitar la creación y el uso de punteros colgantes.
+
+```rust
+fn print_string(s: String) {
+    println!("{}", s);
+}
+
+fn main() {
+    let s = String::from("Hello, World");
+    print_string(s); // s consumed by print_string
+    // s has been moved, so cannot be used any more
+    // another print_string(s); would result in a compile error
+}
+```
 
 ### Lifetimes
 
@@ -115,6 +151,10 @@ fn factorial(i: u64) -> u64 {
 ```
 
 ### Cargo
+
+Cargo es el sistema de compilación y el administrador de paquetes de Rust. Descarga, compila, distribuye y carga paquetes (llamados crates) que se mantienen en un registro oficial. También actúa como interfaz para Clippy y otros componentes de Rust.
+
+[Mostrar alguna foto de nuestro código con clippy, documentación por ejemplo]
 
 ### Concurrencia
 
