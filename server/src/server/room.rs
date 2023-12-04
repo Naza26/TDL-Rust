@@ -131,7 +131,7 @@ impl Room {
     pub fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8) -> bool {
         let participants_chatting = self.history_of_chats.get(&client_id);
         if let Some(participants_chatting) = participants_chatting {
-            if participants_chatting.len() as u8 == self.capacity {
+            if participants_chatting.len() as u8 == (self.capacity - 1) {
                 return true
             }
         } else {
@@ -154,6 +154,11 @@ impl Room {
     pub fn should_finish_room(&self) -> bool {
         for (_client_id, participants) in &self.history_of_chats {
             if (participants.len() as u8) < self.capacity - 1 {
+                return false
+            }
+        }
+        for (_client_id, chatting_client_id) in &self.participants_chatting {
+            if chatting_client_id.is_some() {
                 return false
             }
         }

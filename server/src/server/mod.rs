@@ -137,8 +137,10 @@ impl Server {
             let payload = messages::create_chat_room_started_message(client_id.clone());
             let _ = &self.registered_clients.clients.get(&client_recv_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         } else {
-            let payload = messages::create_wait_new_chat_message();
-            let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+            if !(&self.rooms.rooms.get(&room_id).unwrap().client_has_chatted_with_everyone_in_the_room(client_id)) {
+                let payload = messages::create_wait_new_chat_message();
+                let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+            }
         }
     }
 
