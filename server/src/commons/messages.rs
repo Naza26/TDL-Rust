@@ -74,6 +74,15 @@ pub fn create_quit_chatting_message() -> Vec<u8> {
     message.as_bytes().to_vec()
 }
 
+pub fn create_wait_new_chat_message() -> Vec<u8> {
+    let mut msg = HashMap::new();
+    msg.insert("type".to_string(), Value::String("WAIT_NEW_CHAT".to_string()));
+
+    let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();
+    message += "\n";
+    message.as_bytes().to_vec()
+}
+
 pub fn create_participants_chosen_message() -> Vec<u8> {
     let mut msg = HashMap::new();
     msg.insert("type".to_string(), Value::String("PARTICIPANTS_CHOSEN".to_string()));

@@ -23,6 +23,7 @@ fn main() -> Result<(), ()> {
 
     let address = "0.0.0.0:".to_owned() + &config[0];
 
+    println!("Server listening on port {}", &config[0]);
     server_run(&address).unwrap();
     Ok(())
 }
@@ -50,23 +51,3 @@ fn server_run(address: &str) -> std::io::Result<()> {
         client_id += 1;
     }
 }
-
-/*
-
-{
-    type: "CONNECT",
-    data: {
-        age: 24,
-        name: Naza,
-        coutry: Argentina
-    }
-}
-{
-    type: "MESSAGE",
-    data: "blablabla"
-}
-{
-    type: "FINALIZE_CHAT"
-}
- */
-

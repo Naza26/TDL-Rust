@@ -115,13 +115,13 @@ impl Room {
             return None;
         }
 
-        let mut client_2_chat = self.participants_chatting.get_mut(&found_client_id.unwrap()).unwrap();
+        let client_2_chat = self.participants_chatting.get_mut(&found_client_id.unwrap()).unwrap();
         *client_2_chat = Some(sender_client_id);
-        let mut client_1_chat = self.participants_chatting.get_mut(&sender_client_id).unwrap();
+        let client_1_chat = self.participants_chatting.get_mut(&sender_client_id).unwrap();
         *client_1_chat = Some(found_client_id.clone().unwrap());
-        let mut client_2_history = self.history_of_chats.get_mut(&found_client_id.unwrap()).unwrap();
+        let client_2_history = self.history_of_chats.get_mut(&found_client_id.unwrap()).unwrap();
         client_2_history.push(sender_client_id);
-        let mut client_1_history = self.history_of_chats.get_mut(&sender_client_id).unwrap();
+        let client_1_history = self.history_of_chats.get_mut(&sender_client_id).unwrap();
         client_1_history.push(found_client_id.clone().unwrap());
 
         found_client_id

@@ -48,6 +48,11 @@ pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>, rx:
                     if let Ok(mut client_state_locked) = client_state.lock() {
                         *client_state_locked = ClientState::Waiting;
                     }
+                } else if json["type"] == "WAIT_NEW_CHAT" {
+                    println!("Waiting for new chat");
+                    if let Ok(mut client_state_locked) = client_state.lock() {
+                        *client_state_locked = ClientState::Waiting;
+                    }
                 } else if json["type"] == "PARTICIPANTS" {
                     let participants: HashMap<u8, String> = serde_json::from_str::<HashMap<u8, String>>(&json["data"].to_string()).unwrap();
                     println!("Please type the list of ids of people you wish to match");

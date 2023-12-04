@@ -84,15 +84,13 @@ impl Server {
     }
 
     pub fn finish_chat_room(&mut self, client_id: u8) {
-        // todo: agregar logica de que finaliza la salita de chat
-
         let room_id = self.registered_clients.clients.get(&client_id).unwrap().room_id;
         if room_id.is_none() {
             return;
         }
 
         // finish chat room
-        let mut rooms = &mut self.rooms.rooms;
+        let rooms = &mut self.rooms.rooms;
         let client_recv = rooms.get_mut(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
 
         if client_recv.is_none() {
@@ -105,11 +103,14 @@ impl Server {
 
         self.rooms.rooms.get_mut(&room_id.unwrap()).unwrap().finish_chat(client_id, client_recv.unwrap());
 
-        // finish room
+        // finish room or start new chat
         let should_finish = self.rooms.rooms.get(&room_id.unwrap()).unwrap().should_finish_room();
 
         if should_finish {
             self.finish_room(room_id.unwrap());
+        } else {
+            self.look_for_chat_client(room_id.unwrap(), client_id);
+            self.look_for_chat_client(room_id.unwrap(), client_recv.unwrap());
         }
     }
 
@@ -122,6 +123,22 @@ impl Server {
             let list_participants = self.rooms.rooms.get(&room_id).unwrap().get_rest_of_participants(client_id.clone());
             let payload = messages::create_list_participants_message(self.create_participants_hashmap(list_participants));
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        }
+    }
+
+    fn look_for_chat_client(&mut self, room_id: u8, client_id: u8) {
+        println!("looking for chat client for client {}", client_id);
+        let client_recv_id_option = &self.rooms.rooms.get_mut(&room_id).unwrap().get_client_id_to_chat(client_id);
+
+        if let Some(client_recv_id) = client_recv_id_option {
+            let payload = messages::create_chat_room_started_message(client_recv_id.clone());
+            let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+
+            let payload = messages::create_chat_room_started_message(client_id.clone());
+            let _ = &self.registered_clients.clients.get(&client_recv_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        } else {
+            let payload = messages::create_wait_new_chat_message();
+            let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         }
     }
 
@@ -140,7 +157,7 @@ impl Server {
             return;
         }
 
-        let mut rooms = &mut self.rooms.rooms;
+        let rooms = &mut self.rooms.rooms;
         let client_recv = rooms.get_mut(&room_id.unwrap()).unwrap().get_client_id_to_chat(client_id);
 
         if client_recv.is_none() {
