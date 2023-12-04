@@ -1,12 +1,13 @@
 mod commons;
 mod server_connection;
+pub mod input;
 
 use std::env::args;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use crate::commons::client_state::ClientState;
-use crate::commons::input::start_reading_input;
+use crate::input::start_reading_input;
 
 use crate::server_connection::server_reader::listen_from;
 use crate::server_connection::server_writer::send_client_info;
