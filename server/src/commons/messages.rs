@@ -57,7 +57,7 @@ pub fn create_list_participants_message(participants: HashMap<u8, String>) -> Ve
     let mut msg = HashMap::new();
     msg.insert("type".to_string(), Value::String("PARTICIPANTS".to_string()));
 
-    let data: Value = serde_json::to_value(&participants).expect("Failed to serialize participants to JSON");
+    let data: Value = serde_json::to_value(participants).expect("Failed to serialize participants to JSON");
     msg.insert("data".to_string(), data);
 
     let mut message = serde_json::to_value(&msg).expect("Failed to serialize JSON").to_string();

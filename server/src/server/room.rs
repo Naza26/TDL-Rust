@@ -3,9 +3,9 @@ const CAPACITY: u8 = 4;
 
 #[derive(Debug)]
 pub enum RoomState {
-    WAITING,
-    STARTED,
-    ENDED
+    Waiting,
+    Started,
+    Ended
 }
 
 #[derive(Debug)]
@@ -68,7 +68,7 @@ impl Room {
             history_of_chats: HashMap::new(),
             participants_chatting: HashMap::new(),
             capacity,
-            state: RoomState::WAITING,
+            state: RoomState::Waiting,
             clients_choice: HashMap::new()
         })
     }
@@ -86,7 +86,7 @@ impl Room {
         self.participants_chatting.insert(client_id, None);
 
         if self.is_full() {
-            self.state = RoomState::STARTED;
+            self.state = RoomState::Started;
             return Ok(true);
         }
         Ok(false)
@@ -108,23 +108,21 @@ impl Room {
             if !chatted_participants.contains(&sender_client_id)
                 && *client_id != sender_client_id
                 && self.participants_chatting.get(client_id).unwrap().is_none() {
-                found_client_id = Some(client_id.clone());
+                found_client_id = Some(*client_id);
                 break;
             }
         }
 
-        if found_client_id.is_none() {
-            return None;
-        }
+        found_client_id?;
 
         let client_2_chat = self.participants_chatting.get_mut(&found_client_id.unwrap()).unwrap();
         *client_2_chat = Some(sender_client_id);
         let client_1_chat = self.participants_chatting.get_mut(&sender_client_id).unwrap();
-        *client_1_chat = Some(found_client_id.clone().unwrap());
+        *client_1_chat = Some(found_client_id.unwrap());
         let client_2_history = self.history_of_chats.get_mut(&found_client_id.unwrap()).unwrap();
         client_2_history.push(sender_client_id);
         let client_1_history = self.history_of_chats.get_mut(&sender_client_id).unwrap();
-        client_1_history.push(found_client_id.clone().unwrap());
+        client_1_history.push(found_client_id.unwrap());
 
         found_client_id
     }
@@ -140,27 +138,27 @@ impl Room {
         } else {
             return false
         }
-        return false
+        false
     }
 
 
     pub fn get_rest_of_participants(&self, client_id: u8) -> Vec<u8> {
         let mut participants = Vec::new();
         for participant in &self.participants_in_room {
-            if participant.clone() != client_id {
-                participants.push(participant.clone());
+            if *participant != client_id {
+                participants.push(*participant);
             }
         }
-        return participants;
+        participants
     }
 
     pub fn should_finish_room(&self) -> bool {
-        for (_client_id, participants) in &self.history_of_chats {
+        for participants in self.history_of_chats.values() {
             if (participants.len() as u8) < self.capacity - 1 {
                 return false
             }
         }
-        for (_client_id, chatting_client_id) in &self.participants_chatting {
+        for chatting_client_id in self.participants_chatting.values() {
             if chatting_client_id.is_some() {
                 return false
             }
@@ -190,11 +188,11 @@ impl Room {
         for (client_id, participants) in &self.clients_choice {
             let mut client_match = Vec::new();
             for participant in participants {
-                if self.is_client_choice(client_id.clone(), participant.clone()) {
-                    client_match.push(participant.clone());
+                if self.is_client_choice(*client_id, *participant) {
+                    client_match.push(*participant);
                 }
             }
-            choice.insert(client_id.clone(), client_match);
+            choice.insert(*client_id, client_match);
         }
 
         choice

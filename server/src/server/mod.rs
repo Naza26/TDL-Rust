@@ -11,11 +11,10 @@ use crate::commons::messages;
 use crate::server::room::{Rooms, RoomState};
 
 
-
 pub struct Server {
     pub receiver_thread: Option<JoinHandle<()>>,
     pub registered_clients: Clients,
-    pub rooms: Rooms
+    pub rooms: Rooms,
 }
 
 /// Implement Drop trait for server. This way, when the server
@@ -36,14 +35,13 @@ impl Server {
         Ok(Server {
             receiver_thread: None,
             registered_clients: Clients::new(),
-            rooms: Rooms::new()
+            rooms: Rooms::new(),
         })
     }
 
     pub fn add_client(&mut self, client_id: u8, client_info: ClientInfo, mut stream: TcpStream) {
         self.registered_clients.add_client(client_id, client_info, stream.try_clone().unwrap());
         stream.write_all(&messages::create_connected_message()).unwrap();
-
     }
 
     pub fn insert_client_to_room(&mut self, client_id: u8) -> Result<(), ()> {
@@ -75,9 +73,9 @@ impl Server {
         let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room.clone();
 
         for client in clients {
-            let client_recv_id = &self.rooms.rooms.get_mut(&room_id).unwrap().get_client_id_to_chat(client.clone());
+            let client_recv_id = &self.rooms.rooms.get_mut(&room_id).unwrap().get_client_id_to_chat(*client);
             if let Some(client_id) = client_recv_id {
-                let payload = messages::create_chat_room_started_message(client_id.clone());
+                let payload = messages::create_chat_room_started_message(*client_id);
                 let _ = &self.registered_clients.clients.get(client).unwrap().socket.as_ref().unwrap().write_all(&payload);
             }
         }
@@ -115,12 +113,12 @@ impl Server {
     }
 
     fn finish_room(&mut self, room_id: u8) {
-        self.rooms.rooms.get_mut(&room_id).unwrap().state = RoomState::ENDED;
+        self.rooms.rooms.get_mut(&room_id).unwrap().state = RoomState::Ended;
 
         let clients = &self.rooms.rooms.get(&room_id).unwrap().participants_in_room;
         for client_id in clients {
             println!("Sending message to client id {} for finishing room", client_id);
-            let list_participants = self.rooms.rooms.get(&room_id).unwrap().get_rest_of_participants(client_id.clone());
+            let list_participants = self.rooms.rooms.get(&room_id).unwrap().get_rest_of_participants(*client_id);
             let payload = messages::create_list_participants_message(self.create_participants_hashmap(list_participants));
             let _ = &self.registered_clients.clients.get(client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         }
@@ -131,16 +129,14 @@ impl Server {
         let client_recv_id_option = &self.rooms.rooms.get_mut(&room_id).unwrap().get_client_id_to_chat(client_id);
 
         if let Some(client_recv_id) = client_recv_id_option {
-            let payload = messages::create_chat_room_started_message(client_recv_id.clone());
+            let payload = messages::create_chat_room_started_message(*client_recv_id);
             let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
 
-            let payload = messages::create_chat_room_started_message(client_id.clone());
-            let _ = &self.registered_clients.clients.get(&client_recv_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
-        } else {
-            if !(&self.rooms.rooms.get(&room_id).unwrap().client_has_chatted_with_everyone_in_the_room(client_id)) {
-                let payload = messages::create_wait_new_chat_message();
-                let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
-            }
+            let payload = messages::create_chat_room_started_message(client_id);
+            let _ = &self.registered_clients.clients.get(client_recv_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
+        } else if !(&self.rooms.rooms.get(&room_id).unwrap().client_has_chatted_with_everyone_in_the_room(client_id)) {
+            let payload = messages::create_wait_new_chat_message();
+            let _ = &self.registered_clients.clients.get(&client_id).unwrap().socket.as_ref().unwrap().write_all(&payload);
         }
     }
 
