@@ -22,6 +22,7 @@ pub fn listen_from(socket: TcpStream, client_state: Arc<Mutex<ClientState>>, rx:
         let mut buf = String::new();
         match reader.read_line(&mut buf) {
             Ok(_m) => {
+                // Ejemplo donde se podría usar pattern matching
                 let json = serde_json::from_str::<Value>(&buf).unwrap();
                 if json["type"] == "CONNECTED" {
                     println!("Connected to server");

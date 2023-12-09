@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::net::TcpStream;
 use serde::{Deserialize,Serialize};
 
+// Hablar de macros, decoradores, traits
 #[derive(Debug,Serialize,Deserialize)]
 pub struct ClientInfo {
     pub name: Option<String>,

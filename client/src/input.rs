@@ -7,11 +7,13 @@ use crate::commons::client_state::ClientState;
 use crate::server_connection::server_writer::{send_add_room_message, send_choose_participants_message, send_message, send_quit_message};
 
 pub fn start_reading_input(mut socket: TcpStream, client_state: Arc<Mutex<ClientState>>, tx: Sender<bool>) {
+    // Explicar uso de closures, move y thread
     thread::spawn(move || {
         let stdin: Stdin = stdin();
         for line in stdin.lock().lines() {
             let l = line.unwrap();
             if let Ok(client_state_locked) = client_state.lock() {
+                // Explicar pattern matching
                 match *client_state_locked {
                     ClientState::Waiting => {},
                     ClientState::Chatting => {

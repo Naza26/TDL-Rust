@@ -31,6 +31,7 @@ pub fn connect() {
 
     send_client_info(&mut socket);
 
+    // Explicar channels
     let (tx, rx): (Sender<bool>, Receiver<bool>) = channel();
     start_reading_input(socket.try_clone().unwrap(), client_state.clone(), tx);
     listen_from(socket.try_clone().unwrap(), client_state, rx);
@@ -39,24 +40,3 @@ pub fn connect() {
 fn main() {
     connect();
 }
-
-
-/*
-
-{
-    type: "CONNECTED"
-}
-{
-    type: "ROOM_ADDED",
-    data: {
-        room_id: 2
-    }
-}
-{
-    type: "ROOM_STARTED"
-}
-{
-    type: "MESSAGE",
-    data: "blablabla"
-}
- */

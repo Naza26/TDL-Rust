@@ -43,6 +43,7 @@ pub fn spawn_server_worker(
     recv: Receiver<ServerMessage>,
     mut server: Server
 ) -> JoinHandle<()> {
+    // Explicar arquitectura de server worker
     thread::spawn(move || {
         loop {
             let message: ServerMessage = recv.recv().unwrap();

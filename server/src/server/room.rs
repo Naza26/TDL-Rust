@@ -102,6 +102,8 @@ impl Room {
 
         let mut found_client_id = None;
 
+        // Explicar ownership y problemas
+
         for (client_id, chatted_participants) in &self.history_of_chats {
             if !chatted_participants.contains(&sender_client_id)
                 && *client_id != sender_client_id
@@ -130,6 +132,7 @@ impl Room {
 
     pub fn client_has_chatted_with_everyone_in_the_room(&self, client_id: u8) -> bool {
         let participants_chatting = self.history_of_chats.get(&client_id);
+        // Explicar Results
         if let Some(participants_chatting) = participants_chatting {
             if participants_chatting.len() as u8 == (self.capacity - 1) {
                 return true
